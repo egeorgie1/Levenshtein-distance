@@ -1,0 +1,38 @@
+Solution 
+
+1.Installing the agrep command:
+  
+  sudo apt-get update
+  sudo apt-get install agrep
+
+2.Writing the script 81555.sh:
+
+   2.1 The command 
+     
+       tr -cs "[:alpha:]" "\n" < text.txt
+  
+       translates all non-alphabetic characters from the file text.txt to newlines "\n" and then squeezes all multiple occurrences of "\n" into a single newline character, after all translation is completed. Piped with the command 
+ 
+       tr "[:upper:]" "[:lower:]"
+       
+       which translates all uppercase letters from its input to lowercase, both commands ensure that the newly created file temp.txt will contain a list line-by-line of all words in text.txt without non-alphabetic characters and with all uppercase letters translated to lowercase ones. (with output redirection). After the list is sorted alphabetically and all multiple occurrences of a word are filtered out with use of the command 
+
+       sort -u temp.txt
+
+       the list is assigned as a value of the Shell variable list. A counter is initialized with i=0.
+
+    2.2 In a for-loop for every word in the list we search its "closest" word from dic.txt according to the Levenshtein distance(Edit distance). The counter i represents the minimal Levenshtein distance. In a while-loop, if we find a word  in dic.txt which has a levenshtein distance of i to our word from the list (this check is performed by the command agrep -w -$i -s $word dic.txt, which works silently and searches for the pattern as a word only), the line
+
+   [ $i -gt 0 ] && echo -n $word && echo -n ':' && echo -n $i && echo -n ':' && agrep -w -$i $word dic.txt|head -1l && break 1 || break 1
+
+checks first if the current word is not exactly contained in the dictionary dic.txt(condition [ $i -gt 0 ]). If so,i.e. i equals 0, the OR-command break 1 is executed and we continue with the next word in the for-loop. Otherwise the AND-commands are executed and they print the line:
+
+   <our-word>:<distance>:<word from dic.txt>
+
+where "word from dic.txt" is the word from the dictionary with the minimal Levenshtein distance i to our current word from text.txt. After the line is printed, break 1 is executed and we continue with the next word in the list. 
+If there is no word with Levenshtein distance i in dic.txt, then i is incremented (i=`expr $i + 1` ) and we continue searching in dic.txt for the word with minimal distance to our current word from text.txt.
+
+At the end the output contains one line for every word from text.txt which is not exactly matched with a word from dic.txt.
+
+Sources: Linux man pages
+         http://www.linux-magazine.com/Issues/2016/184/agrep
